@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ดเปรียบเทียบข้อมูลการตรวจรับพัสดุ (Link vs MA Com) | HTML5 Vector Map (Zero-API)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', system-ui, -apple-system, sans-serif;
+            background-color: #070b14;
+            color: #f1f5f9;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Prompt', system-ui, -apple-system, sans-serif;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+        /* SVG Map Styling */
+        #vector-map-viewport {
+            background: radial-gradient(circle at 50% 45%, #111c35 0%, #070b14 85%);
+            cursor: grab;
+            user-select: none;
+        }
+        #vector-map-viewport:active {
+            cursor: grabbing;
+        }
+        .th-land-path {
+            fill: #162238;
+            stroke: #38bdf8;
+            stroke-width: 1.5;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 14px rgba(14, 165, 233, 0.2));
+            transition: fill 0.3s ease;
+        }
+        .map-pin-group {
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .map-pin-group:hover .pin-core {
+            stroke-width: 3px;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+        @keyframes pulse-ring {
+            0% { r: 5px; opacity: 0.85; }
+            100% { r: 16px; opacity: 0; }
+        }
+        .pulse-circle {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-sky-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass-card border-b border-slate-800 px-4 lg:px-8 py-3.5">
+        <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 border border-white/15 font-bold text-lg text-white">
+                    GIS
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full">HTML5 Native Vector Map (No API)</span>
+                        <span class="px-2.5 py-0.5 text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 rounded-full">ปีงบประมาณ 2564 – 2569</span>
+                    </div>
+                    <h1 class="text-lg md:text-xl font-bold text-white mt-0.5">
+                        แดชบอร์ดเปรียบเทียบการเดินทางตรวจรับพัสดุ: โครงการวงจรสื่อสาร (Link) vs บำรุงรักษาคอมพิวเตอร์ (MA Com)
+                    </h1>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="scrollToSection('map-section')" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white transition">
+                    แผนที่โครงร่างประเทศไทย
+                </button>
+                <button onclick="scrollToSection('analytics-section')" class="px-3.5 py-2 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                    กราฟเปรียบเทียบเชิงลึก
+                </button>
+                <button onclick="scrollToSection('unvisited-section')" class="px-3.5 py-2 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/30 transition">
+                    สถานที่ที่ยังไม่ได้ไป (Gap)
+                </button>
+                <button onclick="scrollToSection('matrix-section')" class="px-3.5 py-2 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 transition">
+                    ตารางข้อมูลย้อนหลัง 6 ปี
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1600px] mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+        <!-- 6 KPI Summary Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div class="glass-card rounded-2xl p-4 border-l-4 border-l-indigo-500">
+                <p class="text-xs text-slate-400">ความครอบคลุมระดับจังหวัด</p>
+                <h3 class="text-2xl font-bold text-white mt-1">61 <span class="text-xs font-normal text-slate-400">/ 76 จังหวัด</span></h3>
+                <div class="mt-2 text-xs text-indigo-400 font-semibold">คิดเป็น 80.26% ของภาค 1–9</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4 border-l-4 border-l-sky-500">
+                <p class="text-xs text-sky-400 font-semibold">ตรวจวงจรสื่อสาร (Link)</p>
+                <h3 class="text-2xl font-bold text-white mt-1">43 <span class="text-xs font-normal text-slate-400">จังหวัด (49 จุด)</span></h3>
+                <div class="mt-2 text-xs text-slate-400">56.58% • ยังไม่ไป 33 จังหวัด</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4 border-l-4 border-l-amber-500">
+                <p class="text-xs text-amber-400 font-semibold">ตรวจบำรุงรักษา (MA Com)</p>
+                <h3 class="text-2xl font-bold text-white mt-1">35 <span class="text-xs font-normal text-slate-400">จังหวัด (49 จุด)</span></h3>
+                <div class="mt-2 text-xs text-slate-400">46.05% • ยังไม่ไป 41 จังหวัด</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4 border-l-4 border-l-emerald-500">
+                <p class="text-xs text-emerald-400 font-semibold">ไปครบแล้วทั้ง 2 โครงการ</p>
+                <h3 class="text-2xl font-bold text-white mt-1">17 <span class="text-xs font-normal text-slate-400">จังหวัด (16 จุด)</span></h3>
+                <div class="mt-2 text-xs text-emerald-400">22.37% ซ้อนทับสมบูรณ์</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4 border-l-4 border-l-purple-500">
+                <p class="text-xs text-purple-400 font-semibold">ไปเพียงโครงการเดียว</p>
+                <h3 class="text-2xl font-bold text-white mt-1">44 <span class="text-xs font-normal text-slate-400">จังหวัด (66 จุด)</span></h3>
+                <div class="mt-2 text-xs text-slate-300">Link ล้วน 26 • MA ล้วน 18</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4 border-l-4 border-l-rose-500">
+                <p class="text-xs text-rose-400 font-semibold">ยังไม่เคยไปเลยทั้ง 2 โครงการ</p>
+                <h3 class="text-2xl font-bold text-rose-400 mt-1">15 <span class="text-xs font-normal text-slate-400">จังหวัด (17 จุด)</span></h3>
+                <div class="mt-2 text-xs text-rose-300">19.74% พื้นที่เป้าหมายใหม่</div>
+            </div>
+        </section>
+
+        <!-- Vector Map & Inspector Section -->
+        <section id="map-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Pure HTML5 SVG Vector Map (8 Cols) -->
+            <div class="lg:col-span-8 glass-card rounded-2xl p-4 flex flex-col">
+                <!-- Filter Buttons -->
+                <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                    <div>
+                        <h2 class="text-base font-bold text-white">
+                            แผนที่โครงร่างประเทศไทยและการวางข้อมูลพิกัดตรวจรับ (HTML5 SVG Vector Map)
+                        </h2>
+                        <p class="text-xs text-slate-400">ไม่ต้องใช้ API ภายนอก • คลิกที่จุดพิกัดเพื่อดูรายละเอียด หรือเลื่อน/ซูมแผนที่ด้วยเมาส์</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button onclick="setFilterStatus('ALL')" data-status="ALL" class="status-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white border border-indigo-500 transition">ทั้งหมด (99)</button>
+                        <button onclick="setFilterStatus('BOTH')" data-status="BOTH" class="status-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-emerald-400 border border-emerald-500/30 transition">ครบทั้งคู่ (16)</button>
+                        <button onclick="setFilterStatus('LINK_ONLY')" data-status="LINK_ONLY" class="status-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-sky-400 border border-sky-500/30 transition">เฉพาะ Link (33)</button>
+                        <button onclick="setFilterStatus('MA_ONLY')" data-status="MA_ONLY" class="status-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-amber-400 border border-amber-500/30 transition">เฉพาะ MA (33)</button>
+                        <button onclick="setFilterStatus('UNVISITED_LINK')" data-status="UNVISITED_LINK" class="status-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-cyan-300 border border-cyan-500/30 transition">ยังไม่ไป Link (50)</button>
+                        <button onclick="setFilterStatus('UNVISITED_MA')" data-status="UNVISITED_MA" class="status-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-orange-300 border border-orange-500/30 transition">ยังไม่ไป MA (50)</button>
+                        <button onclick="setFilterStatus('NEITHER')" data-status="NEITHER" class="status-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-rose-400 border border-rose-500/40 transition">ยังไม่เคยไปทั้งคู่ (17)</button>
+                    </div>
+                </div>
+
+                <!-- Region & Year Filter Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <div class="flex flex-wrap items-center gap-1">
+                        <span class="text-xs text-slate-400 mr-1">เลือกภาค:</span>
+                        <button onclick="setFilterRegion('ALL')" data-region="ALL" class="region-btn px-2.5 py-1 rounded text-xs font-bold bg-sky-500 text-white">ทุกภาค</button>
+                        <button onclick="setFilterRegion(1)" data-region="1" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 1</button>
+                        <button onclick="setFilterRegion(2)" data-region="2" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 2</button>
+                        <button onclick="setFilterRegion(3)" data-region="3" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 3</button>
+                        <button onclick="setFilterRegion(4)" data-region="4" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 4</button>
+                        <button onclick="setFilterRegion(5)" data-region="5" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 5</button>
+                        <button onclick="setFilterRegion(6)" data-region="6" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 6</button>
+                        <button onclick="setFilterRegion(7)" data-region="7" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 7</button>
+                        <button onclick="setFilterRegion(8)" data-region="8" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 8</button>
+                        <button onclick="setFilterRegion(9)" data-region="9" class="region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">ภาค 9</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="year-select" onchange="setFilterYear(this.value)" class="bg-slate-900 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 border border-slate-700">
+                            <option value="ALL">ทุกปีงบประมาณ (2564 - 2569)</option>
+                            <option value="2564">ปีงบประมาณ 2564</option>
+                            <option value="2565">ปีงบประมาณ 2565</option>
+                            <option value="2566">ปีงบประมาณ 2566</option>
+                            <option value="2567">ปีงบประมาณ 2567</option>
+                            <option value="2568">ปีงบประมาณ 2568</option>
+                            <option value="2569">ปีงบประมาณ 2569</option>
+                        </select>
+                        <button onclick="toggleLabels()" id="btn-toggle-labels" class="px-2.5 py-1.5 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700">
+                            แสดงชื่อจังหวัด: เปิด
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Interactive SVG Map Viewport -->
+                <div id="vector-map-viewport" class="relative w-full h-[640px] rounded-xl overflow-hidden border border-slate-800">
+                    <!-- Top-Right Map Zoom & Pan Controls -->
+                    <div class="absolute top-3 right-3 z-20 flex flex-col gap-1.5">
+                        <button onclick="zoomMap(1.25)" class="w-8 h-8 rounded-lg glass-card hover:bg-slate-800 text-white font-bold flex items-center justify-center border border-slate-700" title="ซูมเข้า">+</button>
+                        <button onclick="zoomMap(0.8)" class="w-8 h-8 rounded-lg glass-card hover:bg-slate-800 text-white font-bold flex items-center justify-center border border-slate-700" title="ซูมออก">−</button>
+                        <button onclick="resetMapTransform()" class="px-2.5 py-1.5 rounded-lg glass-card hover:bg-slate-800 text-[11px] text-sky-300 border border-slate-700" title="รีเซ็ตมุมมอง">100%</button>
+                    </div>
+
+                    <!-- Top-Left Compass & Coordinate Readout -->
+                    <div class="absolute top-3 left-3 z-20 glass-card px-3 py-2 rounded-xl border border-slate-800 text-xs">
+                        <div class="font-bold text-sky-400">THAILAND VECTOR PROJECTION</div>
+                        <div id="cursor-coords" class="text-[11px] text-slate-400 mt-0.5">คลิกเลือกหมุดบนโครงร่างแผนที่</div>
+                    </div>
+
+                    <!-- Floating Tooltip -->
+                    <div id="map-tooltip" class="hidden absolute z-30 pointer-events-none glass-card p-3 rounded-xl border border-sky-500/40 shadow-2xl min-w-[220px] text-xs"></div>
+
+                    <!-- SVG Canvas -->
+                    <svg id="thailand-svg" viewBox="0 0 560 960" class="w-full h-full">
+                        <defs>
+                            <pattern id=" tactical-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(56, 189, 248, 0.06)" stroke-width="1"/>
+                            </pattern>
+                        </defs>
+                        <!-- Background Grid -->
+                        <rect width="560" height="960" fill="url(# tactical-grid)" />
+
+                        <g id="map-transform-group">
+                            <!-- Latitude / Longitude Reference Lines -->
+                            <g stroke="rgba(148, 163, 184, 0.08)" stroke-dasharray="4 4" stroke-width="1">
+                                <line x1="0" y1="168" x2="560" y2="168" /><text x="12" y="164" fill="#475569" font-size="9">18°N (ภาคเหนือ)</text>
+                                <line x1="0" y1="288" x2="560" y2="288" /><text x="12" y="284" fill="#475569" font-size="9">16°N (ภาคเหนือตอนล่าง/อีสานบน)</text>
+                                <line x1="0" y1="408" x2="560" y2="408" /><text x="12" y="404" fill="#475569" font-size="9">14°N (ภาคกลาง/ตะวันออก)</text>
+                                <line x1="0" y1="528" x2="560" y2="528" /><text x="12" y="524" fill="#475569" font-size="9">12°N (ภาคตะวันตก/อ่าวไทย)</text>
+                                <line x1="0" y1="708" x2="560" y2="708" /><text x="12" y="704" fill="#475569" font-size="9">9°N (ภาคใต้ตอนบน)</text>
+                                <line x1="0" y1="828" x2="560" y2="828" /><text x="12" y="824" fill="#475569" font-size="9">7°N (ภาคใต้ตอนล่าง)</text>
+                            </g>
+
+                            <!-- Thailand Base Vector Outline (Mainland + Phuket + Samui) -->
+                            <path id="thailand-outline" class="th-land-path" d="M 488.3,391.6 L 433.9,383.0 L 358.9,394.5 L 321.8,444.3 L 335.5,516.8 L 283.5,489.3 L 233.8,490.4 L 242.4,443.2 L 191.3,443.6 L 186.7,509.6 L 155.4,597.2 L 136.5,650.2 L 140.5,693.6 L 178.3,695.5 L 201.8,750.3 L 212.2,802.2 L 244.6,836.6 L 279.7,843.6 L 309.8,874.7 L 290.8,899.4 L 252.5,906.5 L 248.0,875.7 L 200.7,849.4 L 190.6,860.1 L 167.7,837.1 L 157.7,807.4 L 126.9,773.5 L 98.8,745.1 L 89.3,780.3 L 78.3,747.0 L 84.6,709.6 L 101.7,652.0 L 129.8,590.4 L 161.7,534.4 L 139.0,479.7 L 139.9,451.8 L 133.3,418.4 L 94.6,370.7 L 80.7,340.6 L 100.8,329.5 L 122.0,277.3 L 98.2,237.7 L 61.4,193.9 L 33.4,141.3 L 57.9,130.4 L 84.3,65.5 L 125.3,62.8 L 159.1,36.8 L 192.3,22.9 L 217.4,41.4 L 220.8,77.5 L 260.0,80.2 L 245.7,143.5 L 247.1,197.2 L 308.2,161.5 L 325.6,172.0 L 359.5,170.3 L 371.2,149.4 L 415.1,153.5 L 459.2,202.3 L 462.8,261.5 L 509.8,313.8 L 507.2,364.6 L 488.3,391.6 Z M 84.7,759.0 L 94.5,759.0 L 94.0,783.0 L 85.3,783.0 Z M 181.5,673.2 L 190.2,673.2 L 190.2,683.4 L 181.5,683.4 Z" />
+
+                            <!-- Regional Hub Connection Lines (Network Topology) -->
+                            <g id="network-lines-layer" stroke="rgba(56, 189, 248, 0.16)" stroke-width="1" stroke-dasharray="2 3"></g>
+
+                            <!-- Regional Watermark Labels -->
+                            <g id="region-watermarks" pointer-events="none" opacity="0.35">
+                                <text x="215" y="395" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 1</text>
+                                <text x="275" y="455" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 2</text>
+                                <text x="365" y="345" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 3</text>
+                                <text x="365" y="235" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 4</text>
+                                <text x="160" y="135" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 5</text>
+                                <text x="195" y="265" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 6</text>
+                                <text x="165" y="445" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 7</text>
+                                <text x="145" y="715" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 8</text>
+                                <text x="225" y="835" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">ภาค 9</text>
+                            </g>
+
+                            <!-- Dynamic Pins & Labels Layer -->
+                            <g id="pins-layer"></g>
+                        </g>
+                    </svg>
+
+                    <!-- Legend Box -->
+                    <div class="absolute bottom-3 left-3 z-20 glass-card p-3 rounded-xl border border-slate-700/80 text-xs space-y-1.5">
+                        <div class="font-bold text-white flex items-center justify-between gap-4 border-b border-slate-700 pb-1">
+                            <span>สัญลักษณ์การวางข้อมูลบนแผนที่</span>
+                            <span id="visible-count-badge" class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px]">99 จุด</span>
+                        </div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block border border-white"></span><span>ตรวจครบทั้ง 2 โครงการ (Link + MA Com)</span></div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sky-500 inline-block border border-white"></span><span>ตรวจเฉพาะโครงการวงจรสื่อสาร (Link)</span></div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block border border-white"></span><span>ตรวจเฉพาะบำรุงรักษาคอมฯ (MA Com)</span></div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block border border-white"></span><span class="text-rose-300 font-semibold">ยังไม่เคยไปเลยทั้ง 2 โครงการ (Gap)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Active Location Inspector & Searchable Directory (4 Cols) -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                <!-- Inspector Card -->
+                <div class="glass-card rounded-2xl p-4 border border-sky-500/30">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span class="text-xs font-bold text-sky-400 uppercase">ข้อมูลเชิงลึกของจุดที่เลือก</span>
+                        <span id="detail-region-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-200">สำนักงานอัยการภาค 9</span>
+                    </div>
+                    <div class="mt-3 space-y-3">
+                        <div>
+                            <h3 id="detail-title" class="text-base font-bold text-white">สำนักงานอัยการภาค 9 / สอจ.สงขลา</h3>
+                            <p id="detail-province" class="text-xs text-slate-400 mt-0.5">จังหวัดสงขลา</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div class="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30">
+                                <div class="text-xs font-semibold text-sky-400 flex items-center justify-between">
+                                    <span>วงจรสื่อสาร (Link)</span>
+                                    <span id="detail-link-status" class="px-1.5 py-0.5 rounded text-[10px] bg-sky-500/20 text-sky-300">ไปแล้ว</span>
+                                </div>
+                                <ul id="detail-link-list" class="mt-1.5 text-xs text-slate-300 space-y-1">
+                                    <li>• ปี 2564: สอจ.สงขลา</li>
+                                    <li>• ปี 2565: สำนักงานอัยการภาค ๙</li>
+                                </ul>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                                <div class="text-xs font-semibold text-amber-400 flex items-center justify-between">
+                                    <span>บำรุงรักษา (MA)</span>
+                                    <span id="detail-ma-status" class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300">ไปแล้ว</span>
+                                </div>
+                                <ul id="detail-ma-list" class="mt-1.5 text-xs text-slate-300 space-y-1">
+                                    <li>• ปี 2567: สอจ.สงขลา</li>
+                                    <li>• ปี 2569: สงขลา (สอภ.9/สอจ./ฯลฯ)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div id="detail-recommendation" class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
+                            <strong>สถานะ:</strong> พื้นที่นี้ได้รับการตรวจรับครบทั้ง 2 โครงการแล้ว
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Directory List -->
+                <div class="glass-card rounded-2xl p-4 flex-1 flex flex-col min-h-[420px]">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-bold text-white">รายชื่อสำนักงานตามตัวกรอง</h3>
+                        <span id="list-result-count" class="text-xs text-slate-400">99 รายการ</span>
+                    </div>
+                    <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="ค้นหาชื่อสำนักงาน หรือ จังหวัด..." class="w-full bg-slate-900 text-xs text-white rounded-xl px-3 py-2 mb-3 border border-slate-700 focus:outline-none focus:border-sky-500">
+                    <div id="location-list-container" class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[400px]"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pure HTML5/CSS Comparative Analytics Section (Zero External Chart Library Needed) -->
+        <section id="analytics-section" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Regional Bar Comparison -->
+            <div class="glass-card rounded-2xl p-5">
+                <h3 class="text-base font-bold text-white">1. เปรียบเทียบความครอบคลุมระดับจังหวัด แยกรายภาค (ภาค 1 – ภาค 9)</h3>
+                <p class="text-xs text-slate-400 mt-0.5">เปรียบเทียบจำนวนจังหวัดที่ตรวจแล้วระหว่าง Link (สีฟ้า), MA Com (สีส้ม) และยังไม่เคยไปทั้งคู่ (สีแดง)</p>
+                <div id="regional-bars-container" class="mt-4 space-y-3"></div>
+            </div>
+
+            <!-- Yearly Frequency & High-Frequency Nodes -->
+            <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-white">2. เปรียบเทียบจำนวนจุดตรวจรับรายปีงบประมาณ (2564 – 2569)</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">ความถี่การเดินทางตรวจรับแต่ละโครงการในรอบ 6 ปีงบประมาณ</p>
+                    <div id="yearly-bars-container" class="mt-4 space-y-3"></div>
+                </div>
+
+                <div class="mt-5 pt-4 border-t border-slate-800">
+                    <h4 class="text-xs font-bold text-indigo-400 uppercase">พื้นที่ที่มีการเดินทางตรวจซ้ำสูงสุด (Repeat Inspection Highlights)</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2 text-xs">
+                        <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                            <span class="font-bold text-sky-400">สอจ.อุดรธานี (ภาค 4):</span> ตรวจ Link ซ้ำ 3 ปี (2564, 2566, 2569) แต่ยังไม่เคยไป MA Com
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                            <span class="font-bold text-emerald-400">สงขลา / สอภ.9 (ภาค 9):</span> ตรวจ Link 2 ปี (2564, 2565) และตรวจ MA Com 2 ปี (2567, 2569)
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                            <span class="font-bold text-emerald-400">สอจ.น่าน (ภาค 5):</span> ตรวจ Link ซ้ำ 2 ปี (2565, 2567) และตรวจ MA Com ปี 2568
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+                            <span class="font-bold text-sky-400">สอจ.ภูเก็ต (ภาค 8) & สอจ.สตูล (ภาค 9):</span> ภูเก็ตตรวจ Link ซ้ำ 2 ปี (2565, 2569) • สตูลตรวจ MA ซ้ำ 2 ปี (2567, 2569)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Unvisited Locations Generator Section -->
+        <section id="unvisited-section" class="glass-card rounded-2xl p-6 border border-rose-500/25">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                <div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">Gap Analysis & Action Plan</span>
+                    <h2 class="text-lg font-bold text-white mt-1">สรุปสถานที่ที่ยังไม่ได้ไปตรวจรับของทั้ง 2 โครงการ (แยกรายภาค 1–9)</h2>
+                    <p class="text-xs text-slate-400">คลิกที่ปุ่มชื่อจังหวัดเพื่อชี้เป้าพิกัดบนโครงร่างแผนที่ประเทศไทยด้านบนได้ทันที</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="switchUnvisitedTab('NEITHER')" id="tab-unvisited-neither" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white">1. ยังไม่เคยไปทั้ง 2 โครงการ (15 จังหวัด)</button>
+                    <button onclick="switchUnvisitedTab('LINK')" id="tab-unvisited-link" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-sky-400 border border-sky-500/30">2. ยังไม่เคยไปตรวจ Link (33 จังหวัด)</button>
+                    <button onclick="switchUnvisitedTab('MA')" id="tab-unvisited-ma" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-amber-400 border border-amber-500/30">3. ยังไม่เคยไปตรวจ MA Com (41 จังหวัด)</button>
+                </div>
+            </div>
+            <div id="unvisited-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5"></div>
+        </section>
+
+        <!-- Raw Historical Matrix Section -->
+        <section id="matrix-section" class="glass-card rounded-2xl p-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                <div>
+                    <h2 class="text-lg font-bold text-white">ตารางเปรียบเทียบข้อมูลต้นฉบับย้อนหลัง 6 ปีงบประมาณ (พ.ศ. 2564 – 2569)</h2>
+                    <p class="text-xs text-slate-400">อ้างอิงจากตารางประวัติการเดินทางตรวจรับทั้ง 2 โครงการ</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="switchMatrixView('SIDE_BY_SIDE')" id="btn-matrix-both" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white">แสดงคู่ขนาน</button>
+                    <button onclick="switchMatrixView('LINK')" id="btn-matrix-link" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-sky-400 border border-slate-700">เฉพาะ Link</button>
+                    <button onclick="switchMatrixView('MA')" id="btn-matrix-ma" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-amber-400 border border-slate-700">เฉพาะ MA Com</button>
+                </div>
+            </div>
+            <div id="matrix-tables-wrapper" class="mt-4 space-y-6 overflow-x-auto"></div>
+        </section>
+
+    </main>
+
+    <script>
+        const LOCATIONS = [
+            {"id":"R1-ANG","name":"สำนักงานอัยการจังหวัดอ่างทอง","province":"อ่างทอง","region":1,"lat":14.5896,"lng":100.455,"svg_x":212.0,"svg_y":372.6,"link_visited":true,"link_years":["2565"],"link_details":["ปี 2565: สำนักงานอัยการจังหวัดอ่างทอง"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-LRI","name":"สำนักงานอัยการจังหวัดลพบุรี","province":"ลพบุรี","region":1,"lat":14.7995,"lng":100.6534,"svg_x":223.5,"svg_y":360.0,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดลพบุรี"],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-CBD","name":"สำนักงานอัยการจังหวัดชัยบาดาล","province":"ลพบุรี","region":1,"lat":15.1975,"lng":101.1356,"svg_x":251.5,"svg_y":336.2,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดชัยบาดาน"],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-SPK","name":"สำนักงานอัยการจังหวัดสมุทรปราการ","province":"สมุทรปราการ","region":1,"lat":13.5991,"lng":100.5968,"svg_x":220.2,"svg_y":432.1,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดสมุทรปราการ"],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-PTE","name":"สำนักงานอัยการจังหวัดปทุมธานี","province":"ปทุมธานี","region":1,"lat":14.0208,"lng":100.525,"svg_x":216.1,"svg_y":406.8,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2566"],"ma_details":["ปี 2566: สอจ.ปทุมธานี"],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-TYB","name":"สำนักงานอัยการจังหวัดธัญบุรี","province":"ปทุมธานี","region":1,"lat":14.0135,"lng":100.6815,"svg_x":225.1,"svg_y":407.2,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2566"],"ma_details":["ปี 2566: สอจ.ธัญบุรี"],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-AYA","name":"สำนักงานอัยการภาค 1 / สอจ.พระนครศรีอยุธยา","province":"พระนครศรีอยุธยา","region":1,"lat":14.3532,"lng":100.5684,"svg_x":218.6,"svg_y":386.8,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":true,"excel_region_note":""},
+            {"id":"R1-NBI","name":"สำนักงานอัยการจังหวัดนนทบุรี","province":"นนทบุรี","region":1,"lat":13.8621,"lng":100.5144,"svg_x":215.4,"svg_y":416.3,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-SRI","name":"สำนักงานอัยการจังหวัดสระบุรี","province":"สระบุรี","region":1,"lat":14.5289,"lng":100.9101,"svg_x":238.4,"svg_y":376.3,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-SBR","name":"สำนักงานอัยการจังหวัดสิงห์บุรี","province":"สิงห์บุรี","region":1,"lat":14.8936,"lng":100.3967,"svg_x":208.6,"svg_y":354.4,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R1-CNT","name":"สำนักงานอัยการจังหวัดชัยนาท","province":"ชัยนาท","region":1,"lat":15.1852,"lng":100.1251,"svg_x":192.9,"svg_y":336.9,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R2-CBI","name":"สำนักงานอัยการภาค 2 / สอจ.ชลบุรี (ตึกเก่าและตึกใหม่)","province":"ชลบุรี","region":2,"lat":13.3611,"lng":100.9847,"svg_x":242.7,"svg_y":446.3,"link_visited":true,"link_years":["2565"],"link_details":["ปี 2565: สำนักงานอัยการภาค ๒, สอจ.ชลบุรี (ตึกเก่า), สอจ.ชลบุรี (ตึกใหม่)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":true,"excel_region_note":""},
+            {"id":"R2-CTI","name":"สำนักงานอัยการจังหวัดจันทบุรี","province":"จันทบุรี","region":2,"lat":12.6113,"lng":102.1039,"svg_x":307.6,"svg_y":491.3,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดจันทบุรี"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R2-TRT","name":"สำนักงานอัยการจังหวัดตราด","province":"ตราด","region":2,"lat":12.2428,"lng":102.5175,"svg_x":331.6,"svg_y":513.4,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดตราด"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R2-NYK","name":"สำนักงานอัยการจังหวัดนครนายก","province":"นครนายก","region":2,"lat":14.2069,"lng":101.2131,"svg_x":256.0,"svg_y":395.6,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดนครนายก"],"is_hq":false,"excel_region_note":""},
+            {"id":"R2-RYG","name":"สำนักงานอัยการจังหวัดระยอง","province":"ระยอง","region":2,"lat":12.6814,"lng":101.2816,"svg_x":259.9,"svg_y":487.1,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดระยอง"],"is_hq":false,"excel_region_note":""},
+            {"id":"R2-SKW","name":"สำนักงานอัยการจังหวัดสระแก้ว","province":"สระแก้ว","region":2,"lat":13.824,"lng":102.0646,"svg_x":305.3,"svg_y":418.6,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2566"],"ma_details":["ปี 2566: สอจ.สระแก้ว"],"is_hq":false,"excel_region_note":""},
+            {"id":"R2-CCO","name":"สำนักงานอัยการจังหวัดฉะเชิงเทรา","province":"ฉะเชิงเทรา","region":2,"lat":13.6904,"lng":101.078,"svg_x":248.1,"svg_y":426.6,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R2-PRI","name":"สำนักงานอัยการจังหวัดปราจีนบุรี","province":"ปราจีนบุรี","region":2,"lat":14.0509,"lng":101.3717,"svg_x":265.2,"svg_y":404.9,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-UBN","name":"สำนักงานอัยการจังหวัดอุบลราชธานี (สอจ./สอย./สคชจ.)","province":"อุบลราชธานี","region":3,"lat":15.2287,"lng":104.8564,"svg_x":467.3,"svg_y":334.3,"link_visited":true,"link_years":["2565"],"link_details":["ปี 2565: สำนักงานอัยการจังหวัดอุบลราชธานี"],"ma_visited":true,"ma_years":["2569"],"ma_details":["ปี 2569: อุบลฯ (สอจ./สอย./สคชจ.)"],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-SIK","name":"สำนักงานอัยการจังหวัดสีคิ้ว","province":"นครราชสีมา","region":3,"lat":14.8967,"lng":101.7145,"svg_x":285.0,"svg_y":354.2,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดสีคิ้ว"],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-ACR","name":"สำนักงานอัยการจังหวัดอำนาจเจริญ","province":"อำนาจเจริญ","region":3,"lat":15.8657,"lng":104.6258,"svg_x":453.9,"svg_y":296.1,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดอำนาจเจริญ"],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-YST","name":"สำนักงานอัยการจังหวัดยโสธร","province":"ยโสธร","region":3,"lat":15.7926,"lng":104.1453,"svg_x":426.0,"svg_y":300.4,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดยโสธร"],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-BRM","name":"สำนักงานอัยการจังหวัดบุรีรัมย์","province":"บุรีรัมย์","region":3,"lat":14.993,"lng":103.1029,"svg_x":365.6,"svg_y":348.4,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2567"],"ma_details":["ปี 2567: สอจ.บุรีรัมย์"],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-NRG","name":"สำนักงานอัยการจังหวัดนางรอง","province":"บุรีรัมย์","region":3,"lat":14.6348,"lng":102.7932,"svg_x":347.6,"svg_y":369.9,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2567"],"ma_details":["ปี 2567: สอจ.นางรอง"],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-SSK","name":"สำนักงานอัยการจังหวัดศรีสะเกษ (สอจ./สอย./สคชจ.)","province":"ศรีสะเกษ","region":3,"lat":15.1186,"lng":104.322,"svg_x":436.3,"svg_y":340.9,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2569"],"ma_details":["ปี 2569: ศรีสะเกษ (สอจ./สอย./สคชจ.)"],"is_hq":false,"excel_region_note":""},
+            {"id":"R3-NMA","name":"สำนักงานอัยการภาค 3 / สอจ.นครราชสีมา","province":"นครราชสีมา","region":3,"lat":14.9799,"lng":102.0978,"svg_x":307.3,"svg_y":349.2,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":true,"excel_region_note":""},
+            {"id":"R3-SRN","name":"สำนักงานอัยการจังหวัดสุรินทร์","province":"สุรินทร์","region":3,"lat":14.8829,"lng":103.4937,"svg_x":388.2,"svg_y":355.0,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-UDN","name":"สำนักงานอัยการจังหวัดอุดรธานี","province":"อุดรธานี","region":4,"lat":17.4138,"lng":102.7872,"svg_x":347.3,"svg_y":203.2,"link_visited":true,"link_years":["2564","2566","2569"],"link_details":["ปี 2564: สอจ.อุดรธานี","ปี 2566: สอจ.อุดรธานี","ปี 2569: สอจ.อุดรธานี (ตรวจซ้ำ 3 ปีงบประมาณ)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-NPM","name":"สำนักงานอัยการจังหวัดนครพนม (สอจ./สอย./สคชจ.)","province":"นครพนม","region":4,"lat":17.392,"lng":104.7695,"svg_x":462.2,"svg_y":204.5,"link_visited":true,"link_years":["2565"],"link_details":["ปี 2565: สำนักงานอัยการจังหวัดนครพนม"],"ma_visited":true,"ma_years":["2569"],"ma_details":["ปี 2569: นครพนม (สอจ./สอย./สคชจ.)"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-BKN","name":"สำนักงานอัยการจังหวัดบึงกาฬ","province":"บึงกาฬ","region":4,"lat":18.3609,"lng":103.6464,"svg_x":397.1,"svg_y":146.3,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดบึงกาฬ"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-MDH","name":"สำนักงานอัยการจังหวัดมุกดาหาร","province":"มุกดาหาร","region":4,"lat":16.5424,"lng":104.7209,"svg_x":459.4,"svg_y":255.5,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดมุกดาหาร"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-SNK","name":"สำนักงานอัยการจังหวัดสกลนคร","province":"สกลนคร","region":4,"lat":17.1546,"lng":104.1348,"svg_x":425.4,"svg_y":218.7,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดสกลนคร"],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: สกลนคร"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-SDD","name":"สำนักงานอัยการจังหวัดสว่างแดนดิน","province":"สกลนคร","region":4,"lat":17.4754,"lng":103.4578,"svg_x":386.2,"svg_y":199.5,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: สอจ.สว่างแดนดิน"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-LEI","name":"สำนักงานอัยการจังหวัดเลย","province":"เลย","region":4,"lat":17.486,"lng":101.7223,"svg_x":285.5,"svg_y":198.8,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดเลย"],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดเลย"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-NKI","name":"สำนักงานอัยการจังหวัดหนองคาย (สอจ./สคชจ./สอย.)","province":"หนองคาย","region":4,"lat":17.8783,"lng":102.742,"svg_x":344.6,"svg_y":175.3,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.หนองคาย"],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: หนองคาย (สอจ./สคชจ./สอย.หนองคาย)"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-KKN","name":"สำนักงานอัยการภาค 4 / สอจ.ขอนแก่น","province":"ขอนแก่น","region":4,"lat":16.4419,"lng":102.836,"svg_x":350.1,"svg_y":261.5,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.ขอนแก่น"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":true,"excel_region_note":""},
+            {"id":"R4-PHL","name":"สำนักงานอัยการจังหวัดพล","province":"ขอนแก่น","region":4,"lat":15.8152,"lng":102.5988,"svg_x":336.3,"svg_y":299.1,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดพล"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-CPM","name":"สำนักงานอัยการจังหวัดชัยภูมิ","province":"ชัยภูมิ","region":3,"lat":15.8068,"lng":102.0315,"svg_x":303.4,"svg_y":299.6,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.ชัยภูมิ (จัดอยู่ในสายตรวจภาค 4)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":"บันทึกในตารางแถวภาค 4 (เขตพื้นที่ติดขอนแก่น)"},
+            {"id":"R4-NBL","name":"สำนักงานอัยการจังหวัดหนองบัวลำภู","province":"หนองบัวลำภู","region":4,"lat":17.2041,"lng":102.4407,"svg_x":327.2,"svg_y":215.8,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดหนองบัวลำภู"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-KSN","name":"สำนักงานอัยการจังหวัดกาฬสินธุ์ (สอจ./สอย./สคชจ.)","province":"กาฬสินธุ์","region":4,"lat":16.4322,"lng":103.5061,"svg_x":389.0,"svg_y":262.1,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2569"],"ma_details":["ปี 2569: กาฬสินธุ์ (สอจ./สอย./สคชจ.)"],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-MKM","name":"สำนักงานอัยการจังหวัดมหาสารคาม","province":"มหาสารคาม","region":4,"lat":16.1851,"lng":103.3026,"svg_x":377.2,"svg_y":276.9,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R4-RET","name":"สำนักงานอัยการจังหวัดร้อยเอ็ด","province":"ร้อยเอ็ด","region":4,"lat":16.0538,"lng":103.652,"svg_x":397.4,"svg_y":284.8,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-CMI","name":"สำนักงานอัยการภาค 5 / สอจ.เชียงใหม่ / สคป.เชียงใหม่","province":"เชียงใหม่","region":5,"lat":18.7883,"lng":98.9853,"svg_x":126.7,"svg_y":120.7,"link_visited":true,"link_years":["2564"],"link_details":["ปี 2564: สำนักงานคดีปกครองเชียงใหม่"],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการภาค 5, สำนักงานอัยการจังหวัดเชียงใหม่"],"is_hq":true,"excel_region_note":""},
+            {"id":"R5-HOD","name":"สำนักงานอัยการจังหวัดฮอด","province":"เชียงใหม่","region":5,"lat":18.1925,"lng":98.6114,"svg_x":105.1,"svg_y":156.4,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2567"],"ma_details":["ปี 2567: สอจ.ฮอด"],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-CDO","name":"สำนักงานอัยการจังหวัดเชียงดาว","province":"เชียงใหม่","region":5,"lat":19.3667,"lng":98.9644,"svg_x":125.5,"svg_y":86.0,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2567"],"ma_details":["ปี 2567: สอจ.เชียงดาว"],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-NAN","name":"สำนักงานอัยการจังหวัดน่าน","province":"น่าน","region":5,"lat":18.7756,"lng":100.773,"svg_x":230.4,"svg_y":121.5,"link_visited":true,"link_years":["2565","2567"],"link_details":["ปี 2565: สอจ.น่าน","ปี 2567: สอจ.น่าน (ตรวจซ้ำ 2 ปีงบประมาณ)"],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: จ.น่าน"],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-PUA","name":"สำนักงานอัยการจังหวัดน่าน (สาขาปัว)","province":"น่าน","region":5,"lat":19.1726,"lng":100.9161,"svg_x":238.7,"svg_y":97.6,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: สอจ.น่าน (สาขาปัว)"],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-PRE","name":"สำนักงานอัยการจังหวัดแพร่ (สอจ./สอย./สคชจ./ศาลสูง)","province":"แพร่","region":5,"lat":18.1446,"lng":100.1403,"svg_x":193.7,"svg_y":159.3,"link_visited":true,"link_years":["2565"],"link_details":["ปี 2565: สำนักงานอัยการจังหวัดแพร่"],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: สอจ.แพร่ / สอย.แพร่ / สคชจ.แพร่ / ศาลสูง จ.แพร่"],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-LPN","name":"สำนักงานอัยการจังหวัดลำพูน","province":"ลำพูน","region":5,"lat":18.5745,"lng":99.0087,"svg_x":128.1,"svg_y":133.5,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดลำพูน"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-LPG","name":"สำนักงานอัยการจังหวัดลำปาง","province":"ลำปาง","region":5,"lat":18.2888,"lng":99.4909,"svg_x":156.1,"svg_y":150.7,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดลำปาง"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-PYO","name":"สำนักงานอัยการจังหวัดพะเยา","province":"พะเยา","region":5,"lat":19.1665,"lng":99.902,"svg_x":179.9,"svg_y":98.0,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดพะเยา"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-MSN","name":"สำนักงานอัยการจังหวัดแม่ฮ่องสอน","province":"แม่ฮ่องสอน","region":5,"lat":19.302,"lng":97.9654,"svg_x":67.6,"svg_y":89.9,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดแม่ฮ่องสอน"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-PAI","name":"สำนักงานอัยการจังหวัดแม่ฮ่องสอน (สาขาปาย)","province":"แม่ฮ่องสอน","region":5,"lat":19.3582,"lng":98.4405,"svg_x":95.1,"svg_y":86.5,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดแม่ฮ่องสอน (สาขาปาย)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-CRI","name":"สำนักงานอัยการจังหวัดเชียงราย","province":"เชียงราย","region":5,"lat":19.9105,"lng":99.8406,"svg_x":176.4,"svg_y":53.4,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดเชียงราย"],"is_hq":false,"excel_region_note":""},
+            {"id":"R5-THG","name":"สำนักงานอัยการจังหวัดเทิง","province":"เชียงราย","region":5,"lat":19.6869,"lng":100.1932,"svg_x":196.8,"svg_y":66.8,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดเทิง"],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-UTI","name":"สำนักงานอัยการจังหวัดอุทัยธานี","province":"อุทัยธานี","region":6,"lat":15.3835,"lng":100.0246,"svg_x":187.0,"svg_y":325.0,"link_visited":true,"link_years":["2564"],"link_details":["ปี 2564: สำนักงานอัยการจังหวัดอุทัยธานี"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-NSN","name":"สำนักงานอัยการจังหวัดนครสวรรค์","province":"นครสวรรค์","region":6,"lat":15.703,"lng":100.1372,"svg_x":193.6,"svg_y":305.8,"link_visited":true,"link_years":["2565"],"link_details":["ปี 2565: สำนักงานอัยการจังหวัดนครสวรรค์"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-PNB","name":"สำนักงานอัยการจังหวัดเพชรบูรณ์","province":"เพชรบูรณ์","region":6,"lat":16.419,"lng":101.1561,"svg_x":252.7,"svg_y":262.9,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดเพชรบูรณ์"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-PLK","name":"สำนักงานอัยการภาค 6 / สอจ.พิษณุโลก","province":"พิษณุโลก","region":6,"lat":16.8211,"lng":100.2659,"svg_x":201.0,"svg_y":238.7,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.พิษณุโลก"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":true,"excel_region_note":""},
+            {"id":"R6-UTD","name":"สำนักงานอัยการจังหวัดอุตรดิตถ์","province":"อุตรดิตถ์","region":5,"lat":17.6201,"lng":100.0993,"svg_x":191.4,"svg_y":190.8,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.อุตรดิตถ์ (จัดอยู่ในสายตรวจภาค 6)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":"บันทึกในตารางแถวภาค 6 (สายตรวจต่อเนื่องพิษณุโลก)"},
+            {"id":"R6-TAK","name":"สำนักงานอัยการจังหวัดตาก","province":"ตาก","region":6,"lat":16.884,"lng":99.1258,"svg_x":134.9,"svg_y":235.0,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.ตาก"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-MSD","name":"สำนักงานอัยการจังหวัดแม่สอด","province":"ตาก","region":6,"lat":16.7131,"lng":98.5708,"svg_x":102.7,"svg_y":245.2,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.แม่สอด"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-KPT","name":"สำนักงานอัยการจังหวัดกำแพงเพชร","province":"กำแพงเพชร","region":6,"lat":16.4828,"lng":99.5227,"svg_x":157.9,"svg_y":259.0,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดกำแพงเพชร"],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-STI","name":"สำนักงานอัยการจังหวัดสุโขทัย","province":"สุโขทัย","region":6,"lat":17.0056,"lng":99.8264,"svg_x":175.5,"svg_y":227.7,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดสุโขทัย"],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-SWL","name":"สำนักงานอัยการจังหวัดสวรรคโลก","province":"สุโขทัย","region":6,"lat":17.3168,"lng":99.8318,"svg_x":175.8,"svg_y":209.0,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดสวรรคโลก"],"is_hq":false,"excel_region_note":""},
+            {"id":"R6-PCT","name":"สำนักงานอัยการจังหวัดพิจิตร","province":"พิจิตร","region":6,"lat":16.4429,"lng":100.3488,"svg_x":205.8,"svg_y":261.4,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-RBR","name":"สำนักงานอัยการภาค 7 / สอจ.ราชบุรี","province":"ราชบุรี","region":7,"lat":13.5283,"lng":99.8134,"svg_x":174.8,"svg_y":436.3,"link_visited":true,"link_years":["2564"],"link_details":["ปี 2564: สำนักงานอัยการภาค ๗"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":true,"excel_region_note":""},
+            {"id":"R7-SPB","name":"สำนักงานอัยการจังหวัดสุพรรณบุรี","province":"สุพรรณบุรี","region":7,"lat":14.4745,"lng":100.1177,"svg_x":192.4,"svg_y":379.5,"link_visited":true,"link_years":["2565"],"link_details":["ปี 2565: สำนักงานอัยการจังหวัดสุพรรณบุรี"],"ma_visited":true,"ma_years":["2566"],"ma_details":["ปี 2566: สอจ.สุพรรณบุรี"],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-KRI","name":"สำนักงานอัยการจังหวัดกาญจนบุรี","province":"กาญจนบุรี","region":7,"lat":14.0228,"lng":99.5328,"svg_x":158.5,"svg_y":406.6,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดกาญจนบุรี"],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดกาญจนบุรี"],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-TPP","name":"สำนักงานอัยการจังหวัดทองผาภูมิ","province":"กาญจนบุรี","region":7,"lat":14.7423,"lng":98.6366,"svg_x":106.5,"svg_y":363.5,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดทองผาภูมิ"],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดทองผาภูมิ"],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-SKN","name":"สำนักงานอัยการจังหวัดสมุทรสาคร","province":"สมุทรสาคร","region":7,"lat":13.5475,"lng":100.2744,"svg_x":201.5,"svg_y":435.2,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดสมุทรสาคร"],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-NPT","name":"สำนักงานอัยการจังหวัดนครปฐม","province":"นครปฐม","region":7,"lat":13.8196,"lng":100.0622,"svg_x":189.2,"svg_y":418.8,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-SKM","name":"สำนักงานอัยการจังหวัดสมุทรสงคราม","province":"สมุทรสงคราม","region":7,"lat":13.4098,"lng":100.0023,"svg_x":185.7,"svg_y":443.4,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-PBI","name":"สำนักงานอัยการจังหวัดเพชรบุรี","province":"เพชรบุรี","region":7,"lat":13.1112,"lng":99.9398,"svg_x":182.1,"svg_y":461.3,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R7-PKN","name":"สำนักงานอัยการจังหวัดประจวบคีรีขันธ์ / สอจ.หัวหิน","province":"ประจวบคีรีขันธ์","region":7,"lat":11.8124,"lng":99.7973,"svg_x":173.8,"svg_y":539.3,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-PKT","name":"สำนักงานอัยการจังหวัดภูเก็ต / สคป.ภูเก็ต / สครภ.8","province":"ภูเก็ต","region":8,"lat":7.8804,"lng":98.3923,"svg_x":92.4,"svg_y":775.2,"link_visited":true,"link_years":["2565","2569"],"link_details":["ปี 2565: สอจ.ภูเก็ต, สคป.ภูเก็ต, สครภ.8","ปี 2569: สอจ.ภูเก็ต (ตรวจซ้ำ 2 ปีงบประมาณ)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-NRT","name":"สำนักงานอัยการภาค 8 / สอจ.นครศรีธรรมราช / สคป.นครศรีฯ","province":"นครศรีธรรมราช","region":8,"lat":8.4304,"lng":99.9631,"svg_x":183.5,"svg_y":742.2,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดนครศรีธรรมราช"],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: นครศรีธรรมราช, สนง.คดีปกครองนครศรีธรรมราช"],"is_hq":true,"excel_region_note":""},
+            {"id":"R8-PPN","name":"สำนักงานอัยการจังหวัดปากพนัง","province":"นครศรีธรรมราช","region":8,"lat":8.3582,"lng":100.2016,"svg_x":197.3,"svg_y":746.5,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: สอจ.ปากพนัง"],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-TSG","name":"สำนักงานอัยการจังหวัดทุ่งสง","province":"นครศรีธรรมราช","region":8,"lat":8.1636,"lng":99.6826,"svg_x":167.2,"svg_y":758.2,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2568"],"ma_details":["ปี 2568: สอจ.ทุ่งสง"],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-USM","name":"สำนักงานอัยการจังหวัดเกาะสมุย","province":"สุราษฎร์ธานี","region":8,"lat":9.512,"lng":100.0136,"svg_x":186.4,"svg_y":677.3,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดเกาะสมุย"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-WSA","name":"สำนักงานอัยการจังหวัดเวียงสระ","province":"สุราษฎร์ธานี","region":8,"lat":8.6406,"lng":99.3662,"svg_x":148.8,"svg_y":729.6,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดเวียงสระ"],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-CYA","name":"สำนักงานอัยการจังหวัดไชยา","province":"สุราษฎร์ธานี","region":8,"lat":9.3878,"lng":99.1986,"svg_x":139.1,"svg_y":684.7,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดไชยา"],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-SRT","name":"สำนักงานอัยการจังหวัดสุราษฎร์ธานี (อ.เมือง)","province":"สุราษฎร์ธานี","region":8,"lat":9.1382,"lng":99.3217,"svg_x":146.3,"svg_y":699.7,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-CPN","name":"สำนักงานอัยการจังหวัดชุมพร","province":"ชุมพร","region":8,"lat":10.493,"lng":99.18,"svg_x":138.0,"svg_y":618.4,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดชุมพร"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-LSN","name":"สำนักงานอัยการจังหวัดหลังสวน","province":"ชุมพร","region":8,"lat":9.9461,"lng":99.0784,"svg_x":132.1,"svg_y":651.2,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดหลังสวน"],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-RNG","name":"สำนักงานอัยการจังหวัดระนอง","province":"ระนอง","region":8,"lat":9.9658,"lng":98.6348,"svg_x":106.4,"svg_y":650.1,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดระนอง"],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดระนอง"],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-KBI","name":"สำนักงานอัยการจังหวัดกระบี่","province":"กระบี่","region":8,"lat":8.0863,"lng":98.9063,"svg_x":122.2,"svg_y":762.8,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดกระบี่"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-PNA","name":"สำนักงานอัยการจังหวัดพังงา","province":"พังงา","region":8,"lat":8.4501,"lng":98.5255,"svg_x":100.1,"svg_y":741.0,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดพังงา"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R8-TKP","name":"สำนักงานอัยการจังหวัดตะกั่วป่า","province":"พังงา","region":8,"lat":8.8681,"lng":98.3582,"svg_x":90.4,"svg_y":715.9,"link_visited":true,"link_years":["2569"],"link_details":["ปี 2569: สอจ.ตะกั่วป่า"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R9-SKA","name":"สำนักงานอัยการภาค 9 / สอจ.สงขลา (สอภ.9/สอจ./สอย./สคชจ./สครภ./สคป./สอข.)","province":"สงขลา","region":9,"lat":7.1898,"lng":100.5954,"svg_x":220.1,"svg_y":816.6,"link_visited":true,"link_years":["2564","2565"],"link_details":["ปี 2564: สำนักงานอัยการจังหวัดสงขลา","ปี 2565: สำนักงานอัยการภาค ๙"],"ma_visited":true,"ma_years":["2567","2569"],"ma_details":["ปี 2567: สอจ.สงขลา","ปี 2569: สงขลา (สอภ.9 /สอจ./สอย./สคชจ./สครภ./สคป./สอข.)"],"is_hq":true,"excel_region_note":""},
+            {"id":"R9-NTW","name":"สำนักงานอัยการจังหวัดนาทวี","province":"สงขลา","region":9,"lat":6.741,"lng":100.6923,"svg_x":225.8,"svg_y":843.5,"link_visited":true,"link_years":["2566"],"link_details":["ปี 2566: สำนักงานอัยการจังหวัดนาทวี"],"ma_visited":true,"ma_years":["2564"],"ma_details":["ปี 2564: สำนักงานอัยการจังหวัดนาทวี"],"is_hq":false,"excel_region_note":""},
+            {"id":"R9-PTN","name":"สำนักงานอัยการจังหวัดปัตตานี / อาญา 4 ภาค 9","province":"ปัตตานี","region":9,"lat":6.8696,"lng":101.2505,"svg_x":258.1,"svg_y":835.8,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดปัตตานี"],"ma_visited":true,"ma_years":["2565"],"ma_details":["ปี 2565: สำนักงานอัยการจังหวัดปัตตานี, อาญา ๔ ภาค ๙"],"is_hq":false,"excel_region_note":""},
+            {"id":"R9-YLA","name":"สำนักงานอัยการจังหวัดยะลา","province":"ยะลา","region":9,"lat":6.5411,"lng":101.2804,"svg_x":259.9,"svg_y":855.5,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดยะลา"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R9-BTG","name":"สำนักงานอัยการจังหวัดเบตง","province":"ยะลา","region":9,"lat":5.7744,"lng":101.0713,"svg_x":247.7,"svg_y":901.5,"link_visited":true,"link_years":["2567"],"link_details":["ปี 2567: สำนักงานอัยการจังหวัดเบตง"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R9-NWT","name":"สำนักงานอัยการจังหวัดนราธิวาส","province":"นราธิวาส","region":9,"lat":6.4255,"lng":101.8253,"svg_x":291.5,"svg_y":862.5,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดนราธิวาส"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":""},
+            {"id":"R9-PLG","name":"สำนักงานอัยการจังหวัดพัทลุง","province":"พัทลุง","region":9,"lat":7.6167,"lng":100.074,"svg_x":189.9,"svg_y":791.0,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดพัทลุง (บันทึกในแถวภาค 8)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":"บันทึกในตารางแถวภาค 8 (สายตรวจต่อเนื่องภาคใต้)"},
+            {"id":"R9-TRG","name":"สำนักงานอัยการจังหวัดตรัง","province":"ตรัง","region":9,"lat":7.5594,"lng":99.6114,"svg_x":163.1,"svg_y":794.4,"link_visited":true,"link_years":["2568"],"link_details":["ปี 2568: สำนักงานอัยการจังหวัดตรัง (บันทึกในแถวภาค 8)"],"ma_visited":false,"ma_years":[],"ma_details":[],"is_hq":false,"excel_region_note":"บันทึกในตารางแถวภาค 8 (สายตรวจต่อเนื่องภาคใต้)"},
+            {"id":"R9-STN","name":"สำนักงานอัยการจังหวัดสตูล (สอจ./สอย./สคชจ.)","province":"สตูล","region":9,"lat":6.6238,"lng":100.0674,"svg_x":189.5,"svg_y":850.6,"link_visited":false,"link_years":[],"link_details":[],"ma_visited":true,"ma_years":["2567","2569"],"ma_details":["ปี 2567: สอจ.สตูล","ปี 2569: สตูล (สอจ./สอย./สคชจ.) (ตรวจซ้ำ 2 ปีงบประมาณ)"],"is_hq":false,"excel_region_note":""}
+        ];
+
+        const RAW_LINK_TABLE = [
+            {"region": "ภาค 1", "2564": "-", "2565": "• สอจ.อ่างทอง", "2566": "-", "2567": "-", "2568": "-", "2569": "-"},
+            {"region": "ภาค 2", "2564": "-", "2565": "• สำนักงานอัยการภาค ๒\n• สอจ.ชลบุรี (ตึกเก่า)\n• สอจ.ชลบุรี (ตึกใหม่)", "2566": "• สอจ.ตราด\n• สอจ.จันทบุรี", "2567": "-", "2568": "-", "2569": "-"},
+            {"region": "ภาค 3", "2564": "-", "2565": "• สอจ.อุบลราชธานี", "2566": "-", "2567": "-", "2568": "-", "2569": "-"},
+            {"region": "ภาค 4", "2564": "• สอจ.อุดรธานี", "2565": "• สอจ.นครพนม", "2566": "• สอจ.อุดรธานี\n• สอจ.บึงกาฬ", "2567": "• สอจ.มุกดาหาร\n• สอจ.สกลนคร", "2568": "• สอจ.เลย", "2569": "• สอจ.อุดรธานี\n• สอจ.หนองคาย\n• สอจ.ขอนแก่น\n• สอจ.ชัยภูมิ"},
+            {"region": "ภาค 5", "2564": "• สคป.เชียงใหม่", "2565": "• สอจ.น่าน\n• สอจ.แพร่", "2566": "• สอจ.ลำพูน\n• สอจ.ลำปาง", "2567": "• สอจ.พะเยา\n• สอจ.น่าน", "2568": "• สอจ.แม่ฮ่องสอน\n• สอจ.แม่ฮ่องสอน (สาขาปาย)", "2569": "-"},
+            {"region": "ภาค 6", "2564": "• สอจ.อุทัยธานี", "2565": "• สอจ.นครสวรรค์", "2566": "-", "2567": "-", "2568": "• สอจ.เพชรบูรณ์", "2569": "• สอจ.พิษณุโลก\n• สอจ.อุตรดิตถ์\n• สอจ.ตาก\n• สอจ.แม่สอด"},
+            {"region": "ภาค 7", "2564": "• สำนักงานอัยการภาค ๗", "2565": "• สอจ.สุพรรณบุรี", "2566": "-", "2567": "-", "2568": "• สอจ.กาญจนบุรี\n• สอจ.ทองผาภูมิ", "2569": "-"},
+            {"region": "ภาค 8", "2564": "-", "2565": "• สอจ.ภูเก็ต\n• สคป.ภูเก็ต\n• สครภ. ๘", "2566": "• สอจ.เกาะสมุย\n• สอจ.นครศรีธรรมราช", "2567": "• สอจ.ชุมพร\n• สอจ.ระนอง\n• สอจ.กระบี่\n• สอจ.พังงา", "2568": "• สอจ.พัทลุง\n• สอจ.ตรัง", "2569": "• สอจ.ตะกั่วป่า\n• สอจ.ภูเก็ต"},
+            {"region": "ภาค 9", "2564": "• สอจ.สงขลา", "2565": "• สำนักงานอัยการภาค ๙", "2566": "• สอจ.นาทวี", "2567": "• สอจ.ยะลา\n• สอจ.เบตง", "2568": "• สอจ.ปัตตานี\n• สอจ.นราธิวาส", "2569": "-"}
+        ];
+
+        const RAW_MA_TABLE = [
+            {"region": "ภาค 1", "2564": "• สอจ.ลพบุรี\n• สอจ.ชัยบาดาน", "2565": "• สอจ.สมุทรปราการ", "2566": "• สอจ.ปทุมธานี\n• สอจ.ธัญบุรี", "2567": "-", "2568": "-", "2569": "-"},
+            {"region": "ภาค 2", "2564": "• สอจ.นครนายก", "2565": "• สอจ.ระยอง", "2566": "• สอจ.สระแก้ว", "2567": "-", "2568": "-", "2569": "-"},
+            {"region": "ภาค 3", "2564": "• สอจ.สีคิ้ว", "2565": "• สอจ.อำนาจเจริญ\n• สอจ.ยโสธร", "2566": "-", "2567": "• สอจ.บุรีรัมย์\n• สอจ.นางรอง", "2568": "-", "2569": "• อุบลฯ - ศรีสะเกษ\n(สอจ./สอย./สคชจ.)"},
+            {"region": "ภาค 4", "2564": "• สอจ.พล", "2565": "• สอจ.หนองบัวลำภู\n• สอจ.เลย", "2566": "-", "2567": "-", "2568": "• หนองคายและสกลนคร\n(สอจ./สคชจ./สอย.หนองคาย)\n• สอจ.สว่างแดนดิน", "2569": "• กาฬสินธุ์ - นครพนม\n(สอจ./สอย./สคชจ.)"},
+            {"region": "ภาค 5", "2564": "• สำนักงานอัยการภาค 5\n• สอจ.เชียงใหม่", "2565": "• สอจ.เชียงราย\n• สอจ.เทิง", "2566": "-", "2567": "• สอจ.ฮอด\n• สอจ.เชียงดาว", "2568": "• น่านและแพร่\n(สอจ.น่าน(สาขาปัว)/สอจ.แพร่/\nสอย.แพร่/สคชจ.แพร่/ศาลสูง จ.แพร่)", "2569": "-"},
+            {"region": "ภาค 6", "2564": "• สอจ.กำแพงเพชร", "2565": "• สอจ.สุโขทัย\n• สอจ.สวรรคโลก", "2566": "-", "2567": "-", "2568": "-", "2569": "-"},
+            {"region": "ภาค 7", "2564": "• สอจ.สมุทรสาคร", "2565": "• สอจ.กาญจนบุรี\n• สอจ.ทองผาภูมิ", "2566": "• สอจ.สุพรรณบุรี", "2567": "-", "2568": "-", "2569": "-"},
+            {"region": "ภาค 8", "2564": "• สอจ.ระนอง\n• สอจ.หลังสวน", "2565": "• สอจ.เวียงสระ\n• สอจ.ไชยา", "2566": "-", "2567": "-", "2568": "• นครศรีธรรมราช\n(สอจ.ปากพนัง / สอจ.ทุ่งสง /\nสนง.คดีปกครองนครศรีธรรมราช)", "2569": "-"},
+            {"region": "ภาค 9", "2564": "• สอจ.นาทวี", "2565": "• สอจ.ปัตตานี\n• อาญา ๔ ภาค ๙", "2566": "-", "2567": "• สอจ.สงขลา\n• สอจ.สตูล", "2568": "-", "2569": "• สงขลา - สตูล\n(สอภ.9 /สอจ./สอย./สคชจ./\nสครภ./สคป./สอข.)"}
+        ];
+
+        // State
+        let currentStatusFilter = 'ALL';
+        let currentRegionFilter = 'ALL';
+        let currentYearFilter = 'ALL';
+        let currentSearchQuery = '';
+        let currentUnvisitedTab = 'NEITHER';
+        let showProvinceLabels = true;
+        let selectedLocationId = 'R9-SKA';
+
+        // SVG Pan & Zoom state
+        let scale = 1, panX = 0, panY = 0;
+        let isDragging = false, startX = 0, startY = 0;
+
+        function getLocationCategory(loc) {
+            if (loc.link_visited && loc.ma_visited) return 'BOTH';
+            if (loc.link_visited && !loc.ma_visited) return 'LINK_ONLY';
+            if (!loc.link_visited && loc.ma_visited) return 'MA_ONLY';
+            return 'NEITHER';
+        }
+
+        function getCategoryMeta(cat) {
+            switch(cat) {
+                case 'BOTH': return { label: 'ตรวจครบทั้ง 2 โครงการ', shortLabel: 'ครบทั้งคู่', color: '#10b981', badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+                case 'LINK_ONLY': return { label: 'เฉพาะวงจรสื่อสาร (Link)', shortLabel: 'เฉพาะ Link', color: '#0ea5e9', badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40' };
+                case 'MA_ONLY': return { label: 'เฉพาะบำรุงรักษา (MA Com)', shortLabel: 'เฉพาะ MA', color: '#f59e0b', badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
+                default: return { label: 'ยังไม่เคยไปทั้ง 2 โครงการ', shortLabel: 'ยังไม่เคยไปทั้งคู่', color: '#f43f5e', badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/40' };
+            }
+        }
+
+        function matchesFilters(loc) {
+            const cat = getLocationCategory(loc);
+            if (currentStatusFilter === 'BOTH' && cat !== 'BOTH') return false;
+            if (currentStatusFilter === 'LINK_ONLY' && cat !== 'LINK_ONLY') return false;
+            if (currentStatusFilter === 'MA_ONLY' && cat !== 'MA_ONLY') return false;
+            if (currentStatusFilter === 'NEITHER' && cat !== 'NEITHER') return false;
+            if (currentStatusFilter === 'UNVISITED_LINK' && loc.link_visited) return false;
+            if (currentStatusFilter === 'UNVISITED_MA' && loc.ma_visited) return false;
+            if (currentRegionFilter !== 'ALL' && loc.region !== Number(currentRegionFilter)) return false;
+            if (currentYearFilter !== 'ALL') {
+                if (!loc.link_years.includes(currentYearFilter) && !loc.ma_years.includes(currentYearFilter)) return false;
+            }
+            if (currentSearchQuery.trim() !== '') {
+                const q = currentSearchQuery.trim().toLowerCase();
+                const match = loc.name.toLowerCase().includes(q) || loc.province.toLowerCase().includes(q);
+                if (!match) return false;
+            }
+            return true;
+        }
+
+        // Render SVG Vector Map & Directory List
+        function renderVectorMapAndList() {
+            const pinsLayer = document.getElementById('pins-layer');
+            const netLayer = document.getElementById('network-lines-layer');
+            pinsLayer.innerHTML = '';
+            netLayer.innerHTML = '';
+
+            const filtered = LOCATIONS.filter(matchesFilters);
+            document.getElementById('visible-count-badge').textContent = `${filtered.length} จุด`;
+            document.getElementById('list-result-count').textContent = `${filtered.length} รายการ`;
+
+            // Draw subtle network lines connecting each region's HQ to offices in the same region
+            for (let r = 1; r <= 9; r++) {
+                const hq = LOCATIONS.find(l => l.region === r && l.is_hq);
+                if (!hq) continue;
+                filtered.filter(l => l.region === r && !l.is_hq).forEach(loc => {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', hq.svg_x);
+                    line.setAttribute('y1', hq.svg_y);
+                    line.setAttribute('x2', loc.svg_x);
+                    line.setAttribute('y2', loc.svg_y);
+                    netLayer.appendChild(line);
+                });
+            }
+
+            const listContainer = document.getElementById('location-list-container');
+            listContainer.innerHTML = '';
+
+            filtered.forEach(loc => {
+                const cat = getLocationCategory(loc);
+                const meta = getCategoryMeta(cat);
+                const isSelected = loc.id === selectedLocationId;
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'map-pin-group');
+                g.setAttribute('transform', `translate(${loc.svg_x}, ${loc.svg_y})`);
+
+                // Pulse ring for NEITHER (Unvisited Gap) or selected pin
+                if (cat === 'NEITHER' || isSelected) {
+                    const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    pulse.setAttribute('class', 'pulse-circle');
+                    pulse.setAttribute('cx', '0');
+                    pulse.setAttribute('cy', '0');
+                    pulse.setAttribute('r', '6');
+                    pulse.setAttribute('fill', 'none');
+                    pulse.setAttribute('stroke', isSelected ? '#ffffff' : meta.color);
+                    pulse.setAttribute('stroke-width', '2');
+                    g.appendChild(pulse);
+                }
+
+                // Pin Core
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('class', 'pin-core');
+                circle.setAttribute('cx', '0');
+                circle.setAttribute('cy', '0');
+                circle.setAttribute('r', loc.is_hq ? '6.5' : '5');
+                circle.setAttribute('fill', meta.color);
+                circle.setAttribute('stroke', isSelected ? '#38bdf8' : '#ffffff');
+                circle.setAttribute('stroke-width', isSelected ? '3' : '1.5');
+                g.appendChild(circle);
+
+                // Label
+                if (showProvinceLabels && (loc.is_hq || scale >= 1.2 || filtered.length <= 45 || isSelected)) {
+                    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    label.setAttribute('x', '8');
+                    label.setAttribute('y', '3');
+                    label.setAttribute('fill', isSelected ? '#38bdf8' : '#e2e8f0');
+                    label.setAttribute('font-size', isSelected ? '10' : '8.5');
+                    label.setAttribute('font-weight', (loc.is_hq || isSelected) ? 'bold' : 'normal');
+                    label.textContent = loc.province;
+                    g.appendChild(label);
+                }
+
+                // Events
+                g.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectLocation(loc.id, false);
+                });
+                g.addEventListener('mouseenter', (e) => showMapTooltip(e, loc, meta));
+                g.addEventListener('mouseleave', hideMapTooltip);
+
+                pinsLayer.appendChild(g);
+
+                // Right List Item
+                const itemEl = document.createElement('div');
+                itemEl.className = `p-2.5 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 ${isSelected ? 'bg-sky-950/60 border-sky-500' : 'bg-slate-900/75 hover:bg-slate-800 border-slate-800'}`;
+                itemEl.onclick = () => selectLocation(loc.id, true);
+
+                const yearsSummary = [];
+                if (loc.link_visited) yearsSummary.push(`Link: ${loc.link_years.join(',')}`);
+                if (loc.ma_visited) yearsSummary.push(`MA: ${loc.ma_years.join(',')}`);
+                const subText = yearsSummary.length > 0 ? yearsSummary.join(' | ') : 'ยังไม่เคยเดินทางตรวจรับทั้ง 2 โครงการ';
+
+                itemEl.innerHTML = `
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">ภาค ${loc.region}</span>
+                            <span class="text-xs font-bold text-white truncate">${loc.name}</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 mt-0.5 truncate">จ.${loc.province} • ${subText}</div>
+                    </div>
+                    <span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${meta.badgeClass}">${meta.shortLabel}</span>
+                `;
+                listContainer.appendChild(itemEl);
+            });
+        }
+
+        function showMapTooltip(e, loc, meta) {
+            const tooltip = document.getElementById('map-tooltip');
+            const viewport = document.getElementById('vector-map-viewport').getBoundingClientRect();
+            tooltip.innerHTML = `
+                <div class="text-[10px] font-bold text-sky-400">สำนักงานอัยการภาค ${loc.region} • จ.${loc.province}</div>
+                <div class="text-xs font-bold text-white mt-0.5">${loc.name}</div>
+                <div class="mt-1.5 pt-1.5 border-t border-slate-700 flex items-center justify-between text-[11px]">
+                    <span class="text-slate-300">สถานะ:</span>
+                    <span class="px-1.5 py-0.5 rounded border ${meta.badgeClass}">${meta.label}</span>
+                </div>
+            `;
+            tooltip.classList.remove('hidden');
+            const left = Math.min(e.clientX - viewport.left + 14, viewport.width - 240);
+            const top = Math.max(e.clientY - viewport.top - 40, 10);
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+        }
+
+        function hideMapTooltip() {
+            document.getElementById('map-tooltip').classList.add('hidden');
+        }
+
+        function selectLocation(id, zoomToPin = false) {
+            selectedLocationId = id;
+            const loc = LOCATIONS.find(l => l.id === id);
+            if (!loc) return;
+
+            document.getElementById('detail-region-badge').textContent = `สำนักงานอัยการภาค ${loc.region}`;
+            document.getElementById('detail-title').textContent = loc.name;
+            document.getElementById('detail-province').textContent = `จังหวัด${loc.province} • โซนพื้นที่ภาค ${loc.region}`;
+            document.getElementById('cursor-coords').textContent = `เลือก: ${loc.name} (จ.${loc.province})`;
+
+            const linkStatus = document.getElementById('detail-link-status');
+            const linkList = document.getElementById('detail-link-list');
+            if (loc.link_visited) {
+                linkStatus.textContent = `ไปแล้ว (${loc.link_years.length} ปี)`;
+                linkStatus.className = 'px-1.5 py-0.5 rounded text-[10px] bg-sky-500/20 text-sky-300 font-semibold';
+                linkList.innerHTML = loc.link_details.map(d => `<li>• ${d}</li>`).join('');
+            } else {
+                linkStatus.textContent = 'ยังไม่เคยไป';
+                linkStatus.className = 'px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 font-semibold';
+                linkList.innerHTML = `<li class="text-rose-300">• ยังไม่เคยตรวจรับวงจรสื่อสาร</li>`;
+            }
+
+            const maStatus = document.getElementById('detail-ma-status');
+            const maList = document.getElementById('detail-ma-list');
+            if (loc.ma_visited) {
+                maStatus.textContent = `ไปแล้ว (${loc.ma_years.length} ปี)`;
+                maStatus.className = 'px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 font-semibold';
+                maList.innerHTML = loc.ma_details.map(d => `<li>• ${d}</li>`).join('');
+            } else {
+                maStatus.textContent = 'ยังไม่เคยไป';
+                maStatus.className = 'px-1.5 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 font-semibold';
+                maList.innerHTML = `<li class="text-rose-300">• ยังไม่เคยตรวจรับ MA Com</li>`;
+            }
+
+            const recBox = document.getElementById('detail-recommendation');
+            const cat = getLocationCategory(loc);
+            if (cat === 'BOTH') {
+                recBox.className = 'p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300';
+                recBox.innerHTML = `<strong>สถานะสมบูรณ์:</strong> สถานที่นี้ได้รับการตรวจรับครบทั้งโครงการ Link และ MA Com แล้ว`;
+            } else if (cat === 'LINK_ONLY') {
+                recBox.className = 'p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300';
+                recBox.innerHTML = `<strong>ข้อเสนอแนะ:</strong> เคยตรวจเฉพาะวงจรสื่อสาร (Link) แนะนำให้บรรจุเข้าแผนตรวจ <strong>MA Com</strong> ในงวดถัดไป`;
+            } else if (cat === 'MA_ONLY') {
+                recBox.className = 'p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 text-xs text-sky-300';
+                recBox.innerHTML = `<strong>ข้อเสนอแนะ:</strong> เคยตรวจเฉพาะ MA Com แนะนำให้บรรจุเข้าแผนตรวจ <strong>วงจรสื่อสาร (Link)</strong> ในงวดถัดไป`;
+            } else {
+                recBox.className = 'p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/35 text-xs text-rose-300';
+                recBox.innerHTML = `<strong>พื้นที่เป้าหมายสำคัญ (Gap):</strong> ยังไม่เคยเดินทางไปตรวจรับทั้ง 2 โครงการ แนะนำให้จัดทริปตรวจควบคู่ทั้ง Link และ MA Com`;
+            }
+
+            if (zoomToPin) {
+                scale = 2.0;
+                panX = 280 - loc.svg_x * scale;
+                panY = 480 - loc.svg_y * scale;
+                applyMapTransform();
+            }
+            renderVectorMapAndList();
+        }
+
+        // SVG Zoom & Pan Mechanics
+        function applyMapTransform() {
+            const g = document.getElementById('map-transform-group');
+            g.setAttribute('transform', `translate(${panX}, ${panY}) scale(${scale})`);
+        }
+
+        function zoomMap(factor) {
+            scale = Math.min(Math.max(scale * factor, 0.85), 4.5);
+            applyMapTransform();
+            renderVectorMapAndList();
+        }
+
+        function resetMapTransform() {
+            scale = 1; panX = 0; panY = 0;
+            applyMapTransform();
+            renderVectorMapAndList();
+        }
+
+        function initSvgPanZoom() {
+            const viewport = document.getElementById('vector-map-viewport');
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const factor = e.deltaY < 0 ? 1.15 : 0.87;
+                zoomMap(factor);
+            }, { passive: false });
+
+            viewport.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - panX;
+                startY = e.clientY - panY;
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                panX = e.clientX - startX;
+                panY = e.clientY - startY;
+                applyMapTransform();
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+        }
+
+        function toggleLabels() {
+            showProvinceLabels = !showProvinceLabels;
+            document.getElementById('btn-toggle-labels').textContent = `แสดงชื่อจังหวัด: ${showProvinceLabels ? 'เปิด' : 'ปิด'}`;
+            renderVectorMapAndList();
+        }
+
+        // Filters
+        function setFilterStatus(status) {
+            currentStatusFilter = status;
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.toggle('ring-2', btn.dataset.status === status);
+                btn.classList.toggle('ring-white', btn.dataset.status === status);
+            });
+            renderVectorMapAndList();
+        }
+
+        function setFilterRegion(region) {
+            currentRegionFilter = region;
+            document.querySelectorAll('.region-btn').forEach(btn => {
+                if (String(btn.dataset.region) === String(region)) {
+                    btn.className = 'region-btn px-2.5 py-1 rounded text-xs font-bold bg-sky-500 text-white';
+                } else {
+                    btn.className = 'region-btn px-2 py-1 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700';
+                }
+            });
+            if (region === 'ALL') {
+                resetMapTransform();
+            } else {
+                const rLocs = LOCATIONS.filter(l => l.region === Number(region));
+                if (rLocs.length > 0) {
+                    const avgX = rLocs.reduce((s, l) => s + l.svg_x, 0) / rLocs.length;
+                    const avgY = rLocs.reduce((s, l) => s + l.svg_y, 0) / rLocs.length;
+                    scale = 1.85;
+                    panX = 280 - avgX * scale;
+                    panY = 480 - avgY * scale;
+                    applyMapTransform();
+                }
+            }
+            renderVectorMapAndList();
+        }
+
+        function setFilterYear(year) { currentYearFilter = year; renderVectorMapAndList(); }
+        function handleSearch(val) { currentSearchQuery = val; renderVectorMapAndList(); }
+
+        function focusProvinceOnMap(provName) {
+            const loc = LOCATIONS.find(l => l.province === provName);
+            if (!loc) return;
+            currentStatusFilter = 'ALL';
+            currentRegionFilter = 'ALL';
+            currentYearFilter = 'ALL';
+            scrollToSection('map-section');
+            selectLocation(loc.id, true);
+        }
+
+        // Render Pure HTML5 Analytics Bars
+        function renderAnalyticsBars() {
+            const regData = [
+                { r: 1, total: 9, link: 1, ma: 3, gap: 5 },
+                { r: 2, total: 8, link: 3, ma: 3, gap: 2 },
+                { r: 3, total: 8, link: 2, ma: 6, gap: 1 },
+                { r: 4, total: 12, link: 8, ma: 7, gap: 2 },
+                { r: 5, total: 9, link: 8, ma: 4, gap: 0 },
+                { r: 6, total: 8, link: 5, ma: 2, gap: 1 },
+                { r: 7, total: 8, link: 3, ma: 3, gap: 4 },
+                { r: 8, total: 7, link: 7, ma: 4, gap: 0 },
+                { r: 9, total: 7, link: 6, ma: 3, gap: 0 }
+            ];
+            const regContainer = document.getElementById('regional-bars-container');
+            regContainer.innerHTML = regData.map(d => `
+                <div class="text-xs space-y-1">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-white">สำนักงานอัยการภาค ${d.r} <span class="text-slate-400 font-normal">(${d.total} จังหวัด)</span></span>
+                        <span class="text-slate-300">Link: <strong class="text-sky-400">${d.link}</strong> | MA: <strong class="text-amber-400">${d.ma}</strong> | ยังไม่เคยไปทั้งคู่: <strong class="text-rose-400">${d.gap}</strong></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"><div class="bg-sky-500 h-full" style="width:${(d.link/d.total)*100}%"></div></div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden"><div class="bg-amber-500 h-full" style="width:${(d.ma/d.total)*100}%"></div></div>
+                    </div>
+                </div>
+            `).join('');
+
+            const yearData = [
+                { y: '2564', link: 5, ma: 11 },
+                { y: '2565', link: 10, ma: 15 },
+                { y: '2566', link: 9, ma: 4 },
+                { y: '2567', link: 10, ma: 6 },
+                { y: '2568', link: 10, ma: 9 },
+                { y: '2569', link: 10, ma: 6 }
+            ];
+            const yearContainer = document.getElementById('yearly-bars-container');
+            yearContainer.innerHTML = yearData.map(d => `
+                <div class="text-xs space-y-1">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-white">ปีงบประมาณ ${d.y}</span>
+                        <span><span class="text-sky-400 font-semibold">Link ${d.link} จุด</span> • <span class="text-amber-400 font-semibold">MA Com ${d.ma} จุด</span></span>
+                    </div>
+                    <div class="flex gap-1.5 items-center">
+                        <div class="bg-sky-500 h-2.5 rounded" style="width:${(d.link/16)*100}%"></div>
+                        <div class="bg-amber-500 h-2.5 rounded" style="width:${(d.ma/16)*100}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Unvisited Generator
+        function switchUnvisitedTab(mode) {
+            currentUnvisitedTab = mode;
+            document.getElementById('tab-unvisited-neither').className = mode === 'NEITHER' ? 'px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white' : 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-rose-400 border border-rose-500/30';
+            document.getElementById('tab-unvisited-link').className = mode === 'LINK' ? 'px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white' : 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-sky-400 border border-sky-500/30';
+            document.getElementById('tab-unvisited-ma').className = mode === 'MA' ? 'px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white' : 'px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-amber-400 border border-amber-500/30';
+            renderUnvisitedCards();
+        }
+
+        function renderUnvisitedCards() {
+            const container = document.getElementById('unvisited-cards-grid');
+            container.innerHTML = '';
+            for (let r = 1; r <= 9; r++) {
+                const rLocs = LOCATIONS.filter(l => l.region === r);
+                const allProvs = [...new Set(rLocs.map(l => l.province))];
+                const linkProvs = new Set(rLocs.filter(l => l.link_visited).map(l => l.province));
+                const maProvs = new Set(rLocs.filter(l => l.ma_visited).map(l => l.province));
+
+                let targetProvs = [], badgeColor = '';
+                if (currentUnvisitedTab === 'NEITHER') {
+                    targetProvs = allProvs.filter(p => !linkProvs.has(p) && !maProvs.has(p));
+                    badgeColor = 'bg-rose-500/15 text-rose-300 border-rose-500/30 hover:bg-rose-500/30';
+                } else if (currentUnvisitedTab === 'LINK') {
+                    targetProvs = allProvs.filter(p => !linkProvs.has(p));
+                    badgeColor = 'bg-sky-500/15 text-sky-300 border-sky-500/30 hover:bg-sky-500/30';
+                } else {
+                    targetProvs = allProvs.filter(p => !maProvs.has(p));
+                    badgeColor = 'bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/30';
+                }
+
+                const badgesHtml = targetProvs.length > 0
+                    ? targetProvs.map(p => `<button onclick="focusProvinceOnMap('${p}')" class="px-2.5 py-1 rounded-lg text-xs font-medium border transition ${badgeColor}">สอจ.${p}</button>`).join('')
+                    : `<div class="text-xs text-emerald-400 font-medium py-1">ตรวจรับครบทุกจังหวัดในภาคนี้แล้ว (100%)</div>`;
+
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-xl bg-slate-900/90 border border-slate-800';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span class="text-sm font-bold text-white">สำนักงานอัยการภาค ${r} <span class="text-xs font-normal text-slate-400">(${allProvs.length} จว.)</span></span>
+                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-200">เหลือ ${targetProvs.length} จังหวัด</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 mt-3">${badgesHtml}</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function switchMatrixView(mode) {
+            const wrapper = document.getElementById('matrix-tables-wrapper');
+            const buildTable = (title, rows) => `
+                <div class="rounded-xl border border-slate-800 overflow-hidden">
+                    <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 font-bold text-sm text-white">${title}</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead><tr class="bg-slate-900/60 text-slate-300 border-b border-slate-800"><th class="p-3">ภาค</th><th class="p-3">2564</th><th class="p-3">2565</th><th class="p-3">2566</th><th class="p-3">2567</th><th class="p-3">2568</th><th class="p-3">2569</th></tr></thead>
+                            <tbody class="divide-y divide-slate-800/70">
+                                ${rows.map(r => `<tr class="align-top hover:bg-slate-800/40"><td class="p-3 font-bold text-white whitespace-nowrap">${r.region}</td><td class="p-3 whitespace-pre-line">${r['2564']}</td><td class="p-3 whitespace-pre-line">${r['2565']}</td><td class="p-3 whitespace-pre-line">${r['2566']}</td><td class="p-3 whitespace-pre-line">${r['2567']}</td><td class="p-3 whitespace-pre-line">${r['2568']}</td><td class="p-3 whitespace-pre-line">${r['2569']}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            wrapper.innerHTML = mode === 'SIDE_BY_SIDE'
+                ? buildTable('1. โครงการตรวจรับวงจรสื่อสาร (Link)', RAW_LINK_TABLE) + buildTable('2. โครงการบำรุงรักษาระบบคอมพิวเตอร์ (MA Com)', RAW_MA_TABLE)
+                : (mode === 'LINK' ? buildTable('โครงการตรวจรับวงจรสื่อสาร (Link)', RAW_LINK_TABLE) : buildTable('โครงการบำรุงรักษาระบบคอมพิวเตอร์ (MA Com)', RAW_MA_TABLE));
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initSvgPanZoom();
+            renderVectorMapAndList();
+            renderAnalyticsBars();
+            renderUnvisitedCards();
+            switchMatrixView('SIDE_BY_SIDE');
+        });
+    </script>
+</body>
+</html>
